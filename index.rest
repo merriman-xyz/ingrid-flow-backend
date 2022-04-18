@@ -1,0 +1,43 @@
+### BASIC TEST
+
+GET http://localhost:4000
+
+### UNKNOWN ENDPOINT TEST
+
+GET http://localhost:4000/unknownEndpoint
+
+### GET ALL NOTES
+
+GET http://localhost:4000/notes
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpkbSIsImlhdCI6MTY0OTY0MjQ4OCwiZXhwIjoxNjQ5NjQ2MDg4fQ.7cZ71yuIj72tCcszC13_bnlM3naLBAp5KzeI_es65Sc
+
+### GET NOTE
+
+GET http://localhost:4000/notes/ToCpF-dJXLl_9rEl1Z9Q_
+
+### ADD NOTE
+
+POST http://localhost:4000/notes
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpkbSIsImlhdCI6MTY0OTY0MjQ4OCwiZXhwIjoxNjQ5NjQ2MDg4fQ.7cZ71yuIj72tCcszC13_bnlM3naLBAp5KzeI_es65Sc
+Content-Type: application/json
+
+{
+  "body": "A NEW TEST NOTE"
+}
+
+### ADD NOTE W/ ERROR
+
+POST http://localhost:4000/notes
+Content-Type: application/json
+
+{
+  "bo": "A TEST NOTE"
+}
+
+### DELETE NOTE
+
+DELETE http://localhost:4000/notes/2SX89rD8J3x6d3mIo02d2
+
+### GET NOTE THAT DOESN'T EXIST
+
+GET http://localhost:4000/notes/DOESNT-EXIST
