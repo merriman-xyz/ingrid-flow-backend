@@ -127,11 +127,11 @@ const db = new Database(databasePath, {fileMustExist: true})
 const SQL_INSERT_USER = db.prepare('INSERT INTO user (username, hashedPassword) VALUES (@username, @hashedPassword)')
 const SQL_SELECT_USER = db.prepare('SELECT * FROM user WHERE username = @username')
 
-const SQL_SELECT_ALL_NOTES = db.prepare('SELECT * FROM note WHERE user_username = @user_username')
-const SQL_INSERT_NOTE = db.prepare('INSERT INTO note (id, user_username, body) VALUES (@id, @user_username, @body)')
+const SQL_SELECT_ALL_NOTES = db.prepare('SELECT * FROM note WHERE user_username = @user_username ORDER BY modified DESC')
+const SQL_INSERT_NOTE = db.prepare('INSERT INTO note (id, user_username, created, modified, title, body) VALUES (@id, @user_username, @created, @modified, @title, @body)')
 const SQL_SELECT_NOTE = db.prepare('SELECT * FROM note WHERE id = @id')
 const SQL_DELETE_NOTE = db.prepare(`DELETE FROM note WHERE id = @id`)
-const SQL_UPDATE_NOTE = db.prepare(`UPDATE note SET body = @body WHERE id = @id`)
+const SQL_UPDATE_NOTE = db.prepare(`UPDATE note SET modified=@modified, title = @title, body = @body WHERE id = @id`)
 
 // ==================
 // # BUSINESS LOGIC #
