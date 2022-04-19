@@ -83,11 +83,15 @@ const authorizedUserRoute = async (request, response, next) => {
     const authorization = request.get('authorization')
     console.log('AUTHORIZATION', authorization)
 
-    if(!authorization){ return response.status(401).json({'error': 'ERROR :: AUTHORIZATION :: TOKEN MISSING OR MALFORMED'}) }
+    if (!authorization) {
+        return response.status(401).json({'error': 'ERROR :: AUTHORIZATION :: TOKEN MISSING OR MALFORMED'})
+    }
 
     const token = authorization.startsWith('bearer ') ? authorization.substring(7) : null
 
-    if (!token) { return response.status(401).json({'error': 'ERROR :: AUTHORIZATION :: TOKEN MISSING OR MALFORMED'}) }
+    if (!token) {
+        return response.status(401).json({'error': 'ERROR :: AUTHORIZATION :: TOKEN MISSING OR MALFORMED'})
+    }
 
     let token$decoded
 
@@ -97,12 +101,11 @@ const authorizedUserRoute = async (request, response, next) => {
         return response.status(401).json({'error': 'ERROR :: AUTHORIZATION :: TOKEN INVALID OR EXPIRED'})
     }
 
-    request.user = { username: token$decoded.username }
+    request.user = {username: token$decoded.username}
 
     next()
 
 }
-
 
 // ==================
 // # DATABASE SETUP #
@@ -157,25 +160,39 @@ const checkUserExists = (username) => {
 // ## NOTES ##
 
 const getAllNotes = (user) => {
-    return SQL_SELECT_ALL_NOTES.all({user_username: user.username})
+    return SQL_SELECT_ALL_NOTES.all({user_username: user.username}).map(note => ({
+        ...note,
+        body: JSON.parse(note.body)
+    }))
 }
 
 const getNote = (user, id) => {
     return SQL_SELECT_NOTE.get({user_username: user.username, id})
 }
 
-const addNote = (user, body) => {
-    const note = {id: nanoid(), user_username: user.username, body}
-    SQL_INSERT_NOTE.run(note)
+const addNote = (user, {title, body}) => {
+    const note = {id: nanoid(), user_username: user.username, title, body}
+    const now = new Date()
+    SQL_INSERT_NOTE.run({...note, created: now.toString(), modified: now.toString(), body: JSON.stringify(note.body)})
     return note
+
 }
 
 const deleteNote = (user, id) => {
     SQL_DELETE_NOTE.run({username: user.username, id})
 }
 
-const updateNote = (username, note) => {
-    SQL_UPDATE_NOTE.run(note)
+const updateNote = (user, note) => {
+    const now = new Date()
+    const note$updated = {
+        ...note,
+        modified: now.toString(),
+        user_username: user.username,
+        body: JSON.stringify(note.body)
+    }
+    SQL_UPDATE_NOTE.run(note$updated)
+    const updatedNote = SQL_SELECT_NOTE.get({user_username: user.username, id: note.id})
+    return { ...updatedNote, body: JSON.parse(updatedNote.body) }
 }
 
 // ORDERS
@@ -268,18 +285,25 @@ app.get('/notes/:id', authorizedUserRoute, (request, response, next) => {
 
 app.post('/notes', authorizedUserRoute, (request, response, next) => {
 
-    console.log('body', request.body)
+    console.log('POST NOTE:')
+
     try {
         POST_NOTE_REQUEST_BODY_VALIDATION.validateSync(request.body)
     } catch (error) {
         return response.status(404).json({error})
     }
 
-    const { body } = request.body
-    const user = request.user
-    const note = addNote(request.user, body)
+    const {title, body} = request.body
 
-    response.status(201).json(note)
+    try {
+        const note = addNote(request.user, {title, body})
+        response.status(201).json(note)
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+
+
 })
 
 app.delete('/notes/:id', authorizedUserRoute, (request, response, next) => {
@@ -289,8 +313,8 @@ app.delete('/notes/:id', authorizedUserRoute, (request, response, next) => {
 })
 
 app.put('/notes/:id', authorizedUserRoute, (request, response, next) => {
-    const updatedNote = updateNote({id: request.params.id, ...request.body})
-    updatedNote ? response.json(updatedNote) : response.status(404).end()
+    const updatedNote = updateNote(request.user, request.body)
+    return updatedNote ? response.status(200).json(updatedNote) : response.status(404).end()
 })
 
 // ========================
