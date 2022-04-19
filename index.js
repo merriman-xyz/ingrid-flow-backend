@@ -64,7 +64,13 @@ const SIGN_UP_REQUEST_BODY_VALIDATION = yup.object({
 
 const LOGIN_REQUEST_BODY_VALIDATION = SIGN_UP_REQUEST_BODY_VALIDATION
 
-const POST_NOTE_REQUEST_BODY_VALIDATION = yup.object({body: yup.string().trim().required()})
+const POST_NOTE_REQUEST_BODY_VALIDATION = yup.object({
+    title: yup.string().trim().required(),
+    body: yup.object({
+        data: yup.object().required(),
+        display: yup.string().trim().required()
+    }).required()
+})
 const PUT_NOTE_REQUEST_BODY_VALIDATION = POST_NOTE_REQUEST_BODY_VALIDATION
 
 // ==============
